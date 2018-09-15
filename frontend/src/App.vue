@@ -34,12 +34,12 @@
         <v-btn
           to="/PayBeneficiary"
           flat>
-          <v-icon>local_atm</v-icon>Pay Beneficiary
+          <v-icon>payment</v-icon>Pay Beneficiary
         </v-btn>
         <v-btn
           to="/AddCenter"
           flat>
-          <v-icon>add</v-icon>Add Markaz
+          <v-icon>school</v-icon>Add Markaz
         </v-btn>
       </v-toolbar-items>
       <v-spacer/>

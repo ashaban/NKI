@@ -119,7 +119,7 @@
           <td>{{props.item.Payments | sumContributions}}</td>
           <td>
             <v-btn color="secondary"><v-icon>edit</v-icon>Edit</v-btn>
-            <v-btn color="primary" @click="displayPayBox(props.item._id)"><v-icon left>local_atm</v-icon> Pay</v-btn>
+            <v-btn color="primary" @click="displayPayBox(props.item._id)"><v-icon left>payment</v-icon> Pay</v-btn>
             <v-btn color="success" @click="viewAll(props.item._id)"><v-icon left>report</v-icon> View All</v-btn>
           </td>
         </template>

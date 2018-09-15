@@ -4,6 +4,9 @@ import Home from './views/Home.vue'
 import AddMember from './components/AddMember'
 import Pledges from './components/Pledges'
 import Contributions from './components/Contributions'
+import AddBeneficiary from './components/AddBeneficiary'
+import PayBeneficiary from './components/PayBeneficiary'
+import AddCenter from './components/AddCenter'
 Vue.use(Router)
 
 export default new Router({
@@ -24,9 +27,24 @@ export default new Router({
       component: Pledges
     },
     {
-      path: '/Contriutions',
-      name: 'Contriutions',
+      path: '/Contributions',
+      name: 'Contributions',
       component: Contributions
+    },
+    {
+      path: '/AddBeneficiary',
+      name: 'AddBeneficiary',
+      component: AddBeneficiary
+    },
+    {
+      path: '/PayBeneficiary',
+      name: 'PayBeneficiary',
+      component: PayBeneficiary
+    },
+    {
+      path: '/AddCenter',
+      name: 'AddCenter',
+      component: AddCenter
     }
   ]
 })

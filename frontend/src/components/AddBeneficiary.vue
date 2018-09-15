@@ -16,20 +16,11 @@
             cards
             dark
             flat>
-            <v-card-title class="title font-weight-regular">Add New Member</v-card-title>
+            <v-card-title class="title font-weight-regular">Add New Beneficiary</v-card-title>
           </v-toolbar>
           <v-form
             ref="form"
             class="pa-3 pt-4">
-            <v-text-field
-              required
-              @blur="$v.code.$touch()"
-              @change="$v.code.$touch()"
-              :error-messages="codeErrors"
-              v-model="code"
-              box
-              color="deep-purple"
-              label="Code"/>
             <v-text-field
               required
               @blur="$v.firstname.$touch()"
@@ -58,6 +49,30 @@
               box
               color="deep-purple"
               label="Nick Name"/>
+            <v-select
+              :items="centers"
+              v-model="center"
+              @blur="$v.center.$touch()"
+              @change="$v.center.$touch()"
+              :error-messages="centerErrors"
+              required single-line clearable
+              box
+              label="Markaz"
+            ></v-select>
+            <v-text-field
+              required
+              @blur="$v.phone.$touch()"
+              @change="$v.phone.$touch()"
+              :error-messages="phoneErrors"
+              v-model="phone"
+              box
+              color="deep-purple"
+              label="Mobile Phone"/>
+            <v-text-field
+              v-model="alt_phone"
+              box
+              color="deep-purple"
+              label="Alt Mobile Phone"/>
           </v-form>
           <v-divider/>
           <v-card-actions>
@@ -68,7 +83,7 @@
             </v-btn>
             <v-spacer/>
             <v-btn
-              @click="addMember()"
+              @click="addBeneficiary()"
               :disabled="$v.$invalid"
               class="white--text"
               color="deep-purple accent-4"
@@ -88,37 +103,43 @@ const isProduction = process.env.NODE_ENV === 'production'
 const backendServer = (isProduction ? config.build.backend : config.dev.backend)
 export default {
   validations: {
-    code: { required },
+    phone: { required },
     firstname: { required },
-    surname: { required }
+    surname: { required },
+    center: { required }
   },
   data () {
     return {
-      code: '',
+      center: '',
+      phone: '',
+      alt_phone: '',
       firstname: '',
       othername: '',
       surname: '',
       nickname: '',
-      username: '',
-      password: ''
+      centers: []
     }
   },
   methods: {
-    addMember () {
+    addBeneficiary () {
       this.$store.state.dynamicProgress = true
-      this.$store.state.dynamicProgressTitle = 'Saving Contributor'
+      this.$store.state.dynamicProgressTitle = 'Saving Beneficiary'
       let formData = new FormData()
-      formData.append('code', this.code)
+      formData.append('center', this.center)
+      formData.append('phone', this.phone)
+      formData.append('alt_phone', this.alt_phone)
       formData.append('firstname', this.firstname)
       formData.append('othername', this.othername)
       formData.append('nickname', this.nickname)
       formData.append('surname', this.surname)
-      axios.post(backendServer + '/addMember/', formData, {
+      axios.post(backendServer + '/addBeneficiary/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       }).then(() => {
-        this.code = ''
+        this.center = ''
+        this.phone = ''
+        this.alt_phone = ''
         this.firstname = ''
         this.othername = ''
         this.nickname = ''
@@ -127,13 +148,29 @@ export default {
       }).catch((err) => {
         console.log(err.response.data.error)
       })
+    },
+    getCenters () {
+      axios.get(backendServer + '/getCenters').then((cntrs)=>{
+        for (let cntr of cntrs.data) {
+          this.centers.push ({
+            text: cntr.name,
+            value: cntr._id
+          })
+        }
+      })
     }
   },
   computed: {
-    codeErrors () {
+    phoneErrors () {
       const errors = []
-      if (!this.$v.code.$dirty) return errors
-      !this.$v.code.required && errors.push('Code is required')
+      if (!this.$v.phone.$dirty) return errors
+      !this.$v.phone.required && errors.push('Primary Phone is required')
+      return errors
+    },
+    centerErrors () {
+      const errors = []
+      if (!this.$v.center.$dirty) return errors
+      !this.$v.center.required && errors.push('Markaz is required')
       return errors
     },
     firstnameErrors () {
@@ -148,6 +185,9 @@ export default {
       !this.$v.surname.required && errors.push('Surname is required')
       return errors
     }
+  },
+  created () {
+    this.getCenters()
   }
 }
 </script>

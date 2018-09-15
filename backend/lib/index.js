@@ -119,5 +119,203 @@ app.post('/addPledge', (req, res) => {
   })
 })
 
+app.get('/getContributions/:period/:id?', (req, res) => {
+  let idFilter
+  if (req.params.id) {
+    idFilter = {
+      _id: req.params.id
+    }
+  } else {
+    idFilter = {}
+  }
+  let contrFilter
+  models.Members.find(idFilter).lean().exec((err, members) => {
+    const membersPromise = []
+    for (let k = 0; k < members.length; k++) {
+      membersPromise.push(new Promise((resolve, reject) => {
+        if (req.params.period === 'all') {
+          contrFilter = {
+            memberId: members[k]._id
+          }
+        } else {
+          contrFilter = {
+            memberId: members[k]._id,
+            period: req.params.period
+          }
+        }
+        models.Contributions.find(contrFilter).exec((err, contr) => {
+          if (contr && contr.hasOwnProperty(0)) {
+            members[k].Contributions = contr
+          } else {
+            members[k].Contributions = []
+          }
+          resolve()
+        })
+      }))
+    }
+    Promise.all(membersPromise).then(() => {
+      res.status(200).json(members)
+    })
+  })
+})
+
+app.post('/addPayment', (req, res) => {
+  const form = new formidable.IncomingForm();
+  form.parse(req, (err, fields, files) => {
+    let Contributions = new models.Contributions({
+      memberId: fields._id,
+      amount: fields.amount,
+      period: fields.period,
+      datePaid: fields.datePaid
+    })
+    
+    Contributions.save((err, data) => {
+      if (err) {
+        winston.error(err)
+        winston.error('Unexpected error occured,please retry')
+        res.status(401).send()
+      } else {
+        winston.info('Payments Done Successfully')
+        res.status(200).send()
+      }
+    })
+  })
+})
+
+app.post('/addBeneficiary', (req, res) => {
+  const form = new formidable.IncomingForm();
+  form.parse(req, (err, fields, files) => {
+    let beneficiary = new models.Beneficiary({
+      phone: fields.phone,
+      alt_phone: fields.alt_phone,
+      centerId: fields.center,
+      firstname: fields.firstname,
+      othername: fields.othername,
+      surname: fields.surname,
+      nickname: fields.nickname
+    })
+    beneficiary.save((err, data) => {
+      if (err) {
+        winston.error(err)
+        winston.error('Unexpected error occured,please retry')
+        res.status(401).send()
+      } else {
+        winston.info('Beneficiary added successfully')
+        res.status(200).send()
+      }
+    })
+  })
+})
+
+app.post('/addCenter', (req, res) => {
+  const form = new formidable.IncomingForm();
+  form.parse(req, (err, fields, files) => {
+    winston.error(fields)
+    let center = new models.Center({
+      phone: fields.phone,
+      alt_phone: fields.alt_phone,
+      name: fields.name,
+      manager: fields.manager,
+      totalBeneficiary: fields.totalBeneficiary,
+      location: fields.location
+    })
+    center.save((err, data) => {
+      if (err) {
+        winston.error(err)
+        winston.error('Unexpected error occured,please retry')
+        res.status(401).send()
+      } else {
+        winston.info('Center added successfully')
+        res.status(200).send()
+      }
+    })
+  })
+})
+
+app.get('/getCenters/:id?', (req, res) => {
+  let idFilter
+  if (req.params.id) {
+    idFilter = {
+      _id: req.params.id
+    }
+  } else {
+    idFilter = {}
+  }
+  models.Center.find(idFilter).lean().exec((err, data) => {
+    if (err) {
+      winston.error(err)
+      winston.error('Unexpected error occured,please retry')
+      res.status(401).send()
+    } else {
+      winston.info('Center returned successfully')
+      res.status(200).json(data)
+    }
+  })
+})
+
+app.get('/getBeneficiaryPay/:period/:id?', (req, res) => {
+  let idFilter
+  if (req.params.id) {
+    idFilter = {
+      _id: req.params.id
+    }
+  } else {
+    idFilter = {}
+  }
+  let contrFilter
+  winston.info('Received a request to get beneficiary payments')
+  models.Beneficiary.find(idFilter).lean().exec((err, beneficiaries) => {
+    const beneficiariesPromise = []
+    for (let k = 0; k < beneficiaries.length; k++) {
+      beneficiariesPromise.push(new Promise((resolve, reject) => {
+        if (req.params.period === 'all') {
+          contrFilter = {
+            beneficiaryId: beneficiaries[k]._id
+          }
+        } else {
+          contrFilter = {
+            beneficiaryId: beneficiaries[k]._id,
+            period: req.params.period
+          }
+        }
+        models.BeneficiaryPayments.find(contrFilter).populate('center', 'name').exec((err, payments) => {
+          if (payments && payments.hasOwnProperty(0)) {
+            beneficiaries[k].Payments = payments
+          } else {
+            beneficiaries[k].Payments = []
+          }
+          resolve()
+        })
+      }))
+    }
+    Promise.all(beneficiariesPromise).then(() => {
+      winston.info('sending back beneficiary payments')
+      res.status(200).json(beneficiaries)
+    })
+  })
+})
+
+app.post('/payBeneficiary', (req, res) => {
+  const form = new formidable.IncomingForm();
+  form.parse(req, (err, fields, files) => {
+    let Contributions = new models.BeneficiaryPayments({
+      beneficiaryId: fields._id,
+      amount: fields.amount,
+      period: fields.period,
+      datePaid: fields.datePaid
+    })
+
+    Contributions.save((err, data) => {
+      if (err) {
+        winston.error(err)
+        winston.error('Unexpected error occured,please retry')
+        res.status(401).send()
+      } else {
+        winston.info('Contribution Added Successfully')
+        res.status(200).send()
+      }
+    })
+  })
+})
 server.listen(config.getConf('server:port'));
 winston.info(`Server is running and listening on port ${config.getConf('server:port')}`);

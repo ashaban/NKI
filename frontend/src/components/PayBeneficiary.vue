@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-dialog
-      v-model="memberContrDialog"
+      v-model="beneficiaryPayDialog"
       persistent :overlay="false"
       transition="scale-transition"
       max-width="800px"
@@ -11,20 +11,20 @@
           <v-layout row wrap>
             <v-flex xs8>
               <v-toolbar-title>
-                <b>{{memberContributions.firstname}} {{memberContributions.othername}} {{memberContributions.surname}} 
-                <label v-if='memberContributions.nickname'> ({{memberContributions.nickname}})</label></b>
+                <b>{{beneficiaryPayments.firstname}} {{beneficiaryPayments.othername}} {{beneficiaryPayments.surname}} 
+                <label v-if='beneficiaryPayments.nickname'> ({{beneficiaryPayments.nickname}})</label></b>
               </v-toolbar-title>
             </v-flex>
             <v-flex xs3>
-              <v-text-field v-model="searchContr" color="white" autofocus append-icon="search" label="Search" single-line hide-details></v-text-field>
+              <v-text-field v-model="searchPayments" color="white" autofocus append-icon="search" label="Search" single-line hide-details></v-text-field>
             </v-flex>
             <v-flex xs1 text-sm-right>
-              <v-icon @click="memberContrDialog = false">close</v-icon>
+              <v-icon @click="beneficiaryPayDialog = false">close</v-icon>
             </v-flex>
           </v-layout>
         </v-toolbar>
         <v-card-text>
-          <v-data-table :headers="singleMemberContrHeader" :items="memberContributions.Contributions" :search="searchContr" light class="elevation-1">
+          <v-data-table :headers="singleBeneficiaryPayHeader" :items="beneficiaryPayments.Payments" :search="searchPayments" light class="elevation-1">
             <template slot="items" slot-scope="props">
               <td>{{props.item.datePaid | formatDate}}</td>
               <td>{{props.item.period}}</td>
@@ -38,7 +38,7 @@
       <v-card height="500px">
         <v-toolbar color="primary" dark>
           <v-toolbar-title>
-            Add Payments
+            Pay Beneficiary
           </v-toolbar-title>
           <v-spacer></v-spacer>
           <v-icon @click="payDialog = false">close</v-icon>
@@ -46,8 +46,8 @@
         <v-card-text>
           <v-layout column>
             <v-flex>
-              <b>{{payingMember.firstname}} {{payingMember.othername}} {{payingMember.surname}} 
-              <label v-if='payingMember.nickname'> ({{payingMember.nickname}})</label></b>
+              <b>{{payingBeneficiary.firstname}} {{payingBeneficiary.othername}} {{payingBeneficiary.surname}} 
+              <label v-if='payingBeneficiary.nickname'> ({{payingBeneficiary.nickname}})</label></b>
             </v-flex>
             <v-flex>
               <v-text-field v-model="amountPaid" 
@@ -104,17 +104,19 @@
         <v-spacer></v-spacer>
         <b>Total {{sum}}</b>
         <v-spacer></v-spacer>
-        <v-text-field v-model="searchMember" append-icon="search" label="Search" single-line hide-details></v-text-field>
+        <v-text-field v-model="searchBeneficiary" append-icon="search" label="Search" single-line hide-details></v-text-field>
       </v-card-title>
-      <v-data-table :headers="contributionsHeader" :items="members" :search="searchMember" light class="elevation-1">
+      <v-data-table :headers="paymentsHeader" :items="beneficiaries" :search="searchBeneficiary" light class="elevation-1">
         <template slot="items" slot-scope="props">
-          <td>{{props.item.code}}</td>
           <td>{{props.item.nickname}}</td>
           <td>{{props.item.firstname}}</td>
           <td>{{props.item.othername}}</td>
           <td>{{props.item.surname}}</td>
+          <td>{{props.item.phone}}</td>
+          <td>{{props.item.alt_phone}}</td>
+          <td>{{props.item.center}}</td>
           <td>{{currentPeriod | formatPeriod}}</td>
-          <td>{{props.item.Contributions | sumContributions}}</td>
+          <td>{{props.item.Payments | sumContributions}}</td>
           <td>
             <v-btn color="secondary"><v-icon>edit</v-icon>Edit</v-btn>
             <v-btn color="primary" @click="displayPayBox(props.item._id)"><v-icon left>local_atm</v-icon> Pay</v-btn>
@@ -159,63 +161,65 @@ export default {
   },
   data () {
     return {
-      contributionsHeader: [
-        { text: 'Code', value: 'code' },
+      paymentsHeader: [
         { text: 'Kuniya', value: 'nickname' },
         { text: 'First Name', value: 'firstname' },
-        { text: 'Other Name', value: 'othertname' },
+        { text: 'Other Name', value: 'othername' },
         { text: 'Surname', value: 'surname' },
+        { text: 'Phone', value: 'phone' },
+        { text: 'Alt Phone', value: 'alt_phone' },
+        { text: 'Markaz Name', value: 'center' },
         { text: 'Period', value: 'period' },
         { text: 'Amount Paid', value: 'paid' }
       ],
-      singleMemberContrHeader: [
+      singleBeneficiaryPayHeader: [
         { text: 'Date Paid', value: 'datePaid' },
         { text: 'Period', value: 'period' },
         { text: 'Amount', value: 'amount' }
       ],
-      members: [],
-      searchMember: '',
-      searchContr: '',
+      beneficiaries: [],
+      ben: [],
+      searchBeneficiary: '',
+      searchPayments: '',
       currentPeriod: moment().format('MMMMYYYY'),
       payDialog: false,
-      payingMember: {},
+      payingBeneficiary: {},
       amountPaid: '',
       datePaid: '',
       payPeriod: '',
-      memberContributions: [],
-      memberContrDialog: false
+      beneficiaryPayments: [],
+      beneficiaryPayDialog: false
     }
   },
   methods: {
     viewAll (id) {
-      this.memberContrDialog = true
+      this.beneficiaryPayDialog = true
       if (!id) {
         id = ''
       }
-      axios.get (backendServer + '/getContributions/all/' + id).then((contributions)=>{
-        this.memberContributions = contributions.data[0]
+      axios.get (backendServer + '/getBeneficiaryPay/all/' + id).then((payments)=>{
+        this.beneficiaryPayments = payments.data[0]
 
       }).catch((err)=>{
 
       })
     },
-    getContributions (period, id) {
+    getPayments (period, id) {
       if (!period) {
         period = this.currentPeriod
       }
       if (!id) {
         id = ''
       }
-      axios.get (backendServer + '/getContributions/' + period + '/' + id).then((contributions)=>{
-        this.members = contributions.data
-        console.log(this.members)
+      axios.get (backendServer + '/getBeneficiaryPay/' + period + '/' + id).then((payments)=>{
+        this.beneficiaries = payments.data
       }).catch((err)=>{
 
       })
     },
     displayPayBox (id) {
-      this.payingMember = this.members.find((member)=>{
-        return member._id === id
+      this.payingBeneficiary = this.beneficiaries.find((beneficiary)=>{
+        return beneficiary._id === id
       })
       this.payDialog = true
     },
@@ -225,20 +229,20 @@ export default {
       this.$store.state.dynamicProgressTitle = 'Saving Payment'
       let period = moment(this.payPeriod).format('MMMMYYYY')
       let formData = new FormData()
-      formData.append('_id', this.payingMember._id)
+      formData.append('_id', this.payingBeneficiary._id)
       formData.append('amount', this.amountPaid)
       formData.append('period', period)
       formData.append('datePaid', this.datePaid)
-      axios.post(backendServer + '/addPayment/', formData, {
+      axios.post(backendServer + '/payBeneficiary/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       }).then(() => {
-        this.getContributions()
+        this.getPayments()
         this.amountPaid = ''
         this.datePaid = ''
         this.payPeriod = ''
-        this.payingMember = {}
+        this.payingBeneficiary = {}
         this.$store.state.dynamicProgress = false
       }).catch((err) => {
         console.log(err.response.data.error)
@@ -269,8 +273,8 @@ export default {
     },
     sum () {
       let contributions = 0
-      for (let k=0;k<this.members.length;k++) {
-        for (let ctr of this.members[k].Contributions) {
+      for (let k = 0;k < this.beneficiaries.length;k++) {
+        for (let ctr of this.beneficiaries[k].Payments) {
           contributions += parseInt(ctr.amount)
         }
       }
@@ -278,7 +282,7 @@ export default {
     }
   },
   created () {
-    this.getContributions()
+    this.getPayments()
   },
   components: { datepicker }
 }

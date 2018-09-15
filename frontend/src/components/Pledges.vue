@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-layout column>
-      <v-dialog persistent v-model="editDialog" max-width="500px">
+      <v-dialog persistent v-model="editDialog" transition="scale-transition" max-width="500px">
         <v-card>
           <v-toolbar color="primary" dark>
             <v-toolbar-title>
@@ -19,8 +19,16 @@
             </v-text-field>
           </v-card-text>
           <v-card-actions>
-            <v-btn color="error" @click.native="editDialog = false">Cancel</v-btn>
-            <v-btn color="primary" :disabled="$v.$invalid" dark @click.native="savePledge()">Save Pledge</v-btn>
+            <v-toolbar color="brown lighten-2">
+              <v-layout row wrap>
+                <v-flex xs6 text-sm-left>
+                  <v-btn color="error" @click.native="editDialog = false"><v-icon>cancel</v-icon>Cancel</v-btn>
+                </v-flex>
+                <v-flex xs6 text-sm-right>
+                  <v-btn color="primary" :disabled="$v.$invalid" dark @click.native="savePledge()"><v-icon>save</v-icon>Save Pledge</v-btn>
+                </v-flex>
+              </v-layout>
+            </v-toolbar>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -102,8 +110,10 @@ export default {
         }
       }).then(() => {
         this.pledgeAmount = ''
+        this.editingPledge = {}
         this.$store.state.dynamicProgress = false
       }).catch((err) => {
+        this.$store.state.dynamicProgress = false
         console.log(err.response.data.error)
       })
     }

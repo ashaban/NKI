@@ -14,7 +14,7 @@
         <v-btn
           to="/addMember"
           flat>
-          <v-icon>add</v-icon>Add Member
+          <v-icon>add</v-icon>Add Contributor
         </v-btn>
         <v-btn
           to="/Pledges"
@@ -25,6 +25,21 @@
           to="/Contributions"
           flat>
           <v-icon>local_atm</v-icon>Contributions
+        </v-btn>
+        <v-btn
+          to="/AddBeneficiary"
+          flat>
+          <v-icon>add</v-icon>Add Beneficiary
+        </v-btn>
+        <v-btn
+          to="/PayBeneficiary"
+          flat>
+          <v-icon>local_atm</v-icon>Pay Beneficiary
+        </v-btn>
+        <v-btn
+          to="/AddCenter"
+          flat>
+          <v-icon>add</v-icon>Add Markaz
         </v-btn>
       </v-toolbar-items>
       <v-spacer/>

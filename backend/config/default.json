@@ -1,0 +1,16 @@
+{
+  "server": {
+    "hostname": "0.0.0.0",
+    "port": 3000
+  },
+  "mongodb": {
+    "host":"localhost",
+    "port":"27017",
+    "database":"NKI",
+    "user":"",
+    "password":""
+  },
+  "logger": {
+    "level": "info"
+  }
+}

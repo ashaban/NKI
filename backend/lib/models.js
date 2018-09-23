@@ -7,6 +7,12 @@ let users = new mongoose.Schema({
     ref: 'Members',
     unique: true
   },
+  role: {
+    type: Schema.Types.ObjectId,
+    ref: 'Roles',
+    type: String,
+    required: true
+  },
   userName: {
     type: String,
     required: true,
@@ -17,6 +23,14 @@ let users = new mongoose.Schema({
   },
   lastModified: {
     type: Date
+  }
+})
+
+let roles = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true
   }
 })
 
@@ -154,9 +168,11 @@ var Contributions = mongoose.model('Contributions', contributions)
 var Beneficiary = mongoose.model('Beneficiary', beneficiary)
 var BeneficiaryPayments = mongoose.model('BeneficiaryPayments', beneficiaryPayments)
 var Center = mongoose.model('Center', center)
+var Roles = mongoose.model('Roles', roles)
 module.exports = {
   Members,
   Users,
+  Roles,
   Pledges,
   Contributions,
   Beneficiary,

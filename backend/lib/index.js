@@ -4,6 +4,8 @@ const formidable = require('formidable');
 const winston = require('winston')
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 var cors = require('cors');
 
 require('./connection')
@@ -28,6 +30,46 @@ winston.add(winston.transports.Console, {
   colorize: true
 })
 
+app.post ('/authenticate', (req,res)=>{
+  const form = new formidable.IncomingForm();
+  form.parse(req, (err, fields, files) => {
+    winston.info('Authenticating user ' + fields.username)
+    models.Users.find({ userName: fields.username }).lean().exec((err, data) => {
+      if (data.length === 1) {
+        let passwordMatch = bcrypt.compareSync(fields.password, data[0].password);
+        if (passwordMatch) {
+          let token = jwt.sign({
+            id: data[0]._id.toString()
+          }, config.getConf('auth:secret'), {
+            expiresIn: 86400 // expires in 24 hours
+          })
+          // get role name
+          models.Roles.find({_id: data[0].role}).lean().exec((err, roles) => {
+            let role = null
+            if (roles.length === 1) {
+              role = roles[0].name
+            }
+            winston.info('Successfully Authenticated user ' + fields.username)
+            res.status(200).json({
+              token,
+              role
+            })
+          })
+        } else {
+          winston.info('Failed Authenticating user ' + fields.username)
+          res.status(200).json({
+            token: null,
+            role: null
+          })
+        }
+      } else {
+        winston.info('Failed Authenticating user ' + fields.username)
+        res.status(200).json({token: null, role: null})
+      }
+    })
+  })
+})
+
 app.post('/addMember', (req, res) => {
   const form = new formidable.IncomingForm();
   form.parse(req, (err, fields, files) => {
@@ -43,10 +85,12 @@ app.post('/addMember', (req, res) => {
       let User = new models.Users({
         memberId: members._id,
         userName: fields.code,
-        password: fields.code
+        role: fields.role,
+        password: bcrypt.hashSync(fields.code, 8)
       })
       User.save((err, data) => {
         if (err) {
+          winston.error(err)
           winston.error('Unexpected error occured,please retry')
           res.status(401).send()
         } else {
@@ -55,6 +99,20 @@ app.post('/addMember', (req, res) => {
         }
       })
     })
+  })
+})
+
+app.get('/getRoles/:id?', (req,res)=>{
+  let idFilter
+  if (req.params.id) {
+    idFilter = {
+      _id: req.params.id
+    }
+  } else {
+    idFilter = {}
+  }
+  models.Roles.find(idFilter).lean().exec((err, roles) => {
+    res.status(200).json(roles)
   })
 })
 

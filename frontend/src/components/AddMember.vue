@@ -57,7 +57,14 @@
               v-model="nickname"
               box
               color="deep-purple"
-              label="Nick Name"/>
+              label="Kuniya"/>
+            <v-select
+              :items="roles"
+              v-model="role"
+              single-line clearable
+              box
+              label="Role"
+            ></v-select>
           </v-form>
           <v-divider/>
           <v-card-actions>
@@ -100,7 +107,9 @@ export default {
       surname: '',
       nickname: '',
       username: '',
-      password: ''
+      password: '',
+      role: '',
+      roles: []
     }
   },
   methods: {
@@ -113,6 +122,7 @@ export default {
       formData.append('othername', this.othername)
       formData.append('nickname', this.nickname)
       formData.append('surname', this.surname)
+      formData.append('role', this.role)
       axios.post(backendServer + '/addMember/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -123,9 +133,20 @@ export default {
         this.othername = ''
         this.nickname = ''
         this.surname = ''
+        this.role = ''
         this.$store.state.dynamicProgress = false
       }).catch((err) => {
         console.log(err.response.data.error)
+      })
+    },
+    getRoles () {
+      console.log('here')
+      axios.get(backendServer + '/getRoles').then((roles)=>{
+        for (let role of roles.data) {
+          this.roles.push ({text: role.name, value: role._id})
+        }
+      }).catch((err)=>{
+        console.log(err.response.data)
       })
     }
   },
@@ -148,6 +169,9 @@ export default {
       !this.$v.surname.required && errors.push('Surname is required')
       return errors
     }
+  },
+  created () {
+    this.getRoles()
   }
 }
 </script>

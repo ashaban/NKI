@@ -5,7 +5,7 @@
       dark
       app>
       <v-toolbar-title v-text="title"/>
-      <v-toolbar-items>
+      <v-toolbar-items v-if="$store.state.token">
         <v-btn
           to="/"
           flat>
